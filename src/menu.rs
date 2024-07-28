@@ -36,6 +36,7 @@ fn get_input() -> String {
 pub fn execute_option(option: i8) {
     match option {
         1 => option_1::echo::print(option.to_string()),
+        0 => {},
         _ => println!("No option identified as {} was found!", option)
     }
 }
