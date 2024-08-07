@@ -1,5 +1,5 @@
 use std::io::{self, Write};
-use crate::options as option_1;
+use crate::options::{cat, echo};
 
 pub fn show_menu(show_creator_name: bool, selected_option: &mut i8) { 
 
@@ -9,7 +9,11 @@ pub fn show_menu(show_creator_name: bool, selected_option: &mut i8) {
     };
 
     println!("Choose one of the options below:");
-    println!("1 - Echo the same written text");
+    println!("1 - Echo the same written text"); // echo
+    println!("2 - Concatenate files"); // cat
+    println!("3 - List directories"); // ls
+    println!("4 - Locate files or directories"); // find
+    println!("5 - Find text in files"); // grep
     println!("0 - Exit\n");
 
     let mut input;
@@ -35,8 +39,10 @@ fn get_input() -> String {
 
 pub fn execute_option(option: i8) {
     match option {
-        1 => option_1::echo::print(option.to_string()),
+        1 => echo::print(option.to_string()),
+        2 => cat::concatenate(),
         0 => {},
         _ => println!("No option identified as {} was found!", option)
     }
+
 }
