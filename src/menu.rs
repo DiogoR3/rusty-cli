@@ -1,5 +1,5 @@
 use std::io::{self, Write};
-use crate::options::{cat, echo};
+use crate::options::{cat, directories, echo};
 
 pub fn show_menu(show_creator_name: bool, selected_option: &mut i8) { 
 
@@ -18,7 +18,7 @@ pub fn show_menu(show_creator_name: bool, selected_option: &mut i8) {
 
     let mut input;
     loop {
-        input = get_input();
+        input = get_option();
         match input.parse::<i8>() {
             Ok(value) => { 
                 *selected_option = value; 
@@ -29,9 +29,9 @@ pub fn show_menu(show_creator_name: bool, selected_option: &mut i8) {
     }
 }
 
-fn get_input() -> String {
+fn get_option() -> String {
     let mut input = String::new();
-    print!("Enter a number: ");
+    print!("Enter a option: ");
     io::stdout().flush().unwrap();
     io::stdin().read_line(&mut input).expect("Failed to read line");
     input.trim().to_string() // Remove any trailing newline characters
@@ -40,7 +40,15 @@ fn get_input() -> String {
 pub fn execute_option(option: i8) {
     match option {
         1 => echo::print(option.to_string()),
-        2 => cat::concatenate(),
+        2 => {
+            match cat::concatenate_and_write_files("D:/FileA.txt", "D:/FileB.txt", "D:/TextC.txt") {
+                Ok(path) => println!("Files concatenated and written to: {}", path),
+                Err(e) => eprintln!("Error concatenating and writing files: {}", e),
+            }
+        }
+        3 => directories::list(),
+        4 => directories::locate_files(),
+        5 => directories::find_text(),
         0 => {},
         _ => println!("No option identified as {} was found!", option)
     }
