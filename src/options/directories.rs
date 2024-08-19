@@ -1,11 +1,11 @@
-pub fn list() {
+pub fn list(parameters: &[String]) {
     
 }
 
-pub fn locate_files() {
+pub fn locate_files(parameters: &[String]) {
     
 }
 
-pub fn find_text() {
+pub fn find_text(parameters: &[String]) {
 
 }

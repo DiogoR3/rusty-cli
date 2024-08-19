@@ -1,56 +1,86 @@
 use std::io::{self, Write};
 use crate::options::{cat, directories, echo};
+use std::fmt;
 
-pub fn show_menu(show_creator_name: bool, selected_option: &mut i8) { 
+pub enum OptionError {
+    InvalidOption,
+    MissingParameter,
+}
 
+pub struct Option {
+    id: i8,
+    text: &'static str,
+    parameters_count: i8,
+    pub function: std::option::Option<fn(&[String])>
+} 
+
+impl Option {
+    pub fn get_parameters(&self) -> Result<Vec<String>, OptionError> {
+        let mut parameters = Vec::new();
+        let mut input = String::new();
+        let mut parameters_remaining = self.parameters_count;
+
+        while parameters_remaining > 0 {
+            print!("Parameter #{}: ", self.parameters_count - parameters_remaining + 1);
+            io::stdout().flush().expect("Failed to flush stdout");
+            input.clear();
+            io::stdin().read_line(&mut input).expect("Failed to read line");
+            let trimmed_input = input.trim();
+
+            parameters.push(trimmed_input.to_string());
+            parameters_remaining -= 1;
+        }
+        
+        Ok(parameters)
+    }
+}
+
+const OPTIONS: [Option; 6] = [
+    Option { id: 1, text: "Echo text", parameters_count: 1, function: Some(echo::print) },
+    Option { id: 2, text: "Concatenate files", parameters_count: 3, function: Some(cat::concatenate_and_write_files) },
+    Option { id: 3, text: "List directories", parameters_count: 1, function: Some(directories::list) },
+    Option { id: 4, text: "Locate files", parameters_count: 1, function: Some(directories::locate_files) },
+    Option { id: 5, text: "Find text", parameters_count: 1, function: Some(directories::find_text) },
+    Option { id: 0, text: "Exit", parameters_count: 0, function: None },
+];
+
+impl fmt::Display for OptionError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            OptionError::InvalidOption => write!(f, "The option provided is invalid."),
+            OptionError::MissingParameter => write!(f, "A required parameter is missing."),
+        }
+    }
+}
+
+pub fn show_menu(show_creator_name: bool) { 
     if show_creator_name {
-        let separator = "-".repeat(5);
+        let separator: String = "-".repeat(5);
         println!("{} Rusty CLI by Diogo Carreira {}", separator, separator)
     };
-
+    
     println!("Choose one of the options below:");
-    println!("1 - Echo the same written text"); // echo
-    println!("2 - Concatenate files"); // cat
-    println!("3 - List directories"); // ls
-    println!("4 - Locate files or directories"); // find
-    println!("5 - Find text in files"); // grep
-    println!("0 - Exit\n");
-
-    let mut input;
-    loop {
-        input = get_option();
-        match input.parse::<i8>() {
-            Ok(value) => { 
-                *selected_option = value; 
-                break;
-            }
-            Err(_) => println!("Invalid input, please enter a valid number."),
-        }
+    for option in OPTIONS.iter() {
+        println!("{} - {}", option.id, option.text);
     }
 }
 
-fn get_option() -> String {
+pub fn get_option() -> Result<&'static Option, OptionError> {
     let mut input = String::new();
-    print!("Enter a option: ");
-    io::stdout().flush().unwrap();
-    io::stdin().read_line(&mut input).expect("Failed to read line");
-    input.trim().to_string() // Remove any trailing newline characters
-}
+    loop {
+        print!("Enter an option: ");
+        io::stdout().flush().unwrap();
+        io::stdin().read_line(&mut input).expect("Failed to read line");
 
-pub fn execute_option(option: i8) {
-    match option {
-        1 => echo::print(option.to_string()),
-        2 => {
-            match cat::concatenate_and_write_files("D:/FileA.txt", "D:/FileB.txt", "D:/TextC.txt") {
-                Ok(path) => println!("Files concatenated and written to: {}", path),
-                Err(e) => eprintln!("Error concatenating and writing files: {}", e),
+        match input.trim().parse::<i8>() {
+            Ok(value) => {
+                if let Some(selected_option) = OPTIONS.iter().find(|&opt| opt.id == value) {
+                    return Ok(selected_option);
+                }
+
+                return Err(OptionError::InvalidOption);
             }
+            Err(_) => return Err(OptionError::InvalidOption)
         }
-        3 => directories::list(),
-        4 => directories::locate_files(),
-        5 => directories::find_text(),
-        0 => {},
-        _ => println!("No option identified as {} was found!", option)
     }
-
 }

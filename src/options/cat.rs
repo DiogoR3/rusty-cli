@@ -1,12 +1,9 @@
 use std::fs::{read_to_string, write};
-use std::io::Result;
 
-pub fn concatenate_and_write_files(path1: &str, path2: &str, new_path: &str) -> Result<String> {
-    let content1 = read_to_string(path1)?;
-    let content2 = read_to_string(path2)?;
+pub fn concatenate_and_write_files(paths: &[String]) {
+    let content1 = read_to_string(&paths[0]).unwrap();
+    let content2 = read_to_string(&paths[1]).unwrap();
     let combined_content = content1 + &content2;
 
-    write(new_path, combined_content)?;
-
-    Ok(new_path.to_string())
+    write(&paths[2], combined_content);
 }

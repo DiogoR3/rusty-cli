@@ -1,5 +1,7 @@
-mod menu;
 mod options;
+mod menu;
+use std::process;
+use menu::get_option;
 
 fn main() {
     let all_args: Vec<String> = std::env::args().collect();
@@ -9,9 +11,23 @@ fn main() {
         for option in all_args_except_first {
             println!("{}", option);
         }
+
+        process::exit(1);
+    } 
+    
+    menu::show_menu(true);
+
+    if let Ok(option) = get_option() {
+        if let Ok(parameters) = option.get_parameters() {
+            if let Some(func) = option.function {
+                func(&parameters);
+            } else {
+                process::exit(0);
+            }
+        } else {
+            eprintln!("Error: {}", option.get_parameters().err().unwrap());
+        }
     } else {
-        let mut selected_option: i8 = 0;
-        menu::show_menu(true, &mut selected_option);
-        menu::execute_option(selected_option);
+        eprintln!("Error: {}", get_option().err().unwrap());
     }
 }

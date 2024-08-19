@@ -1,3 +1,5 @@
-pub fn print(text: String) {
-    println!("{}", text)
+pub fn print(parameters: &[String]) {
+    for parameter in parameters {
+        println!("{}", parameter);
+    }
 }
