@@ -1,4 +1,6 @@
 use std::io::{self, Write};
+use colored::Colorize;
+
 use crate::options::{cat, directories, echo};
 use std::fmt;
 
@@ -22,9 +24,7 @@ impl Option {
 
         while parameters_remaining > 0 {
             print!("Parameter #{}: ", self.parameters_count - parameters_remaining + 1);
-            io::stdout().flush().expect("Failed to flush stdout");
-            input.clear();
-            io::stdin().read_line(&mut input).expect("Failed to read line");
+            read_input(&mut input);
             let trimmed_input = input.trim();
 
             parameters.push(trimmed_input.to_string());
@@ -56,7 +56,7 @@ impl fmt::Display for OptionError {
 pub fn show_menu(show_creator_name: bool) { 
     if show_creator_name {
         let separator: String = "-".repeat(5);
-        println!("{} Rusty CLI by Diogo Carreira {}", separator, separator)
+        println!("{} {} {}", separator, "Rusty CLI by Diogo Carreira".underline(), separator)
     };
     
     println!("Choose one of the options below:");
@@ -69,18 +69,21 @@ pub fn get_option() -> Result<&'static Option, OptionError> {
     let mut input = String::new();
     loop {
         print!("Enter an option: ");
-        io::stdout().flush().unwrap();
-        io::stdin().read_line(&mut input).expect("Failed to read line");
+        read_input(&mut input);
 
         match input.trim().parse::<i8>() {
             Ok(value) => {
                 if let Some(selected_option) = OPTIONS.iter().find(|&opt| opt.id == value) {
                     return Ok(selected_option);
                 }
-
-                return Err(OptionError::InvalidOption);
             }
             Err(_) => return Err(OptionError::InvalidOption)
         }
     }
+}
+
+fn read_input(input: &mut String) {
+    io::stdout().flush().expect("Failed to flush stdout");
+    input.clear();
+    io::stdin().read_line(input).expect("Failed to read line");
 }
