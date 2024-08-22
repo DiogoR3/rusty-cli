@@ -1,19 +1,22 @@
-use std::io::{self, Write};
+use std::{error::Error, io::{self, Write}};
 use colored::Colorize;
 
 use crate::options::{cat, directories, echo};
 use std::fmt;
 
+#[derive(Debug)]
 pub enum OptionError {
     InvalidOption,
-    MissingParameter,
+    //MissingParameter,
 }
+
+impl Error for OptionError {}
 
 pub struct Option {
     id: i8,
     text: &'static str,
     parameters_count: i8,
-    pub function: std::option::Option<fn(&[String])>
+    pub function: std::option::Option<fn(&[String]) -> Result<(), Box<dyn std::error::Error>>>
 } 
 
 impl Option {
@@ -23,8 +26,10 @@ impl Option {
         let mut parameters_remaining = self.parameters_count;
 
         while parameters_remaining > 0 {
-            print!("Parameter #{}: ", self.parameters_count - parameters_remaining + 1);
-            read_input(&mut input);
+            print!("Parameter #{}: ", (self.parameters_count - parameters_remaining + 1).to_string().cyan());
+            io::stdout().flush().expect("Failed to flush stdout");
+            input.clear();
+            io::stdin().read_line(&mut input).expect("Failed to read line");
             let trimmed_input = input.trim();
 
             parameters.push(trimmed_input.to_string());
@@ -48,7 +53,6 @@ impl fmt::Display for OptionError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             OptionError::InvalidOption => write!(f, "The option provided is invalid."),
-            OptionError::MissingParameter => write!(f, "A required parameter is missing."),
         }
     }
 }
@@ -69,21 +73,18 @@ pub fn get_option() -> Result<&'static Option, OptionError> {
     let mut input = String::new();
     loop {
         print!("Enter an option: ");
-        read_input(&mut input);
+        io::stdout().flush().unwrap();
+        io::stdin().read_line(&mut input).expect("Failed to read line");
 
         match input.trim().parse::<i8>() {
             Ok(value) => {
                 if let Some(selected_option) = OPTIONS.iter().find(|&opt| opt.id == value) {
                     return Ok(selected_option);
                 }
+
+                return Err(OptionError::InvalidOption);
             }
             Err(_) => return Err(OptionError::InvalidOption)
         }
     }
-}
-
-fn read_input(input: &mut String) {
-    io::stdout().flush().expect("Failed to flush stdout");
-    input.clear();
-    io::stdin().read_line(input).expect("Failed to read line");
 }
