@@ -1,12 +1,13 @@
 use std::{error::Error, io::{self, Write}};
 use colored::Colorize;
 
-use crate::options::{cat, directories, echo};
+use crate::options::{cat, directories, open_apps};
 use std::fmt;
 
 #[derive(Debug)]
 pub enum OptionError {
     InvalidOption,
+    FileDoesntExist(String),
     //MissingParameter,
 }
 
@@ -41,7 +42,7 @@ impl Option {
 }
 
 const OPTIONS: [Option; 6] = [
-    Option { id: 1, text: "Echo text", parameters_count: 1, function: Some(echo::print) },
+    Option { id: 1, text: "Open Apps", parameters_count: 0, function: Some(open_apps::run_apps) },
     Option { id: 2, text: "Concatenate files", parameters_count: 3, function: Some(cat::concatenate_and_write_files) },
     Option { id: 3, text: "List directories", parameters_count: 1, function: Some(directories::list) },
     Option { id: 4, text: "Locate files", parameters_count: 1, function: Some(directories::locate_files) },
@@ -53,6 +54,7 @@ impl fmt::Display for OptionError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             OptionError::InvalidOption => write!(f, "The option provided is invalid."),
+            OptionError::FileDoesntExist(file_name) => write!(f, "File {} doesn't exist.", file_name)
         }
     }
 }
@@ -60,7 +62,7 @@ impl fmt::Display for OptionError {
 pub fn show_menu(show_creator_name: bool) { 
     if show_creator_name {
         let separator: String = "-".repeat(5);
-        println!("{} {} {}", separator, "Rusty CLI by Diogo Carreira".underline(), separator)
+        println!("{} {} {}", separator, "Rusty CLI by dcarreira".underline(), separator)
     };
     
     println!("Choose one of the options below:");
