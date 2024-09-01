@@ -1,13 +1,14 @@
-use std::{error::Error, io::{self, Write}};
+use std::{error::Error, io::{self, Write}, process};
 use colored::Colorize;
 
-use crate::options::{cat, directories, open_apps};
+use crate::options::{cat, files_directories, open_apps};
 use std::fmt;
 
 #[derive(Debug)]
 pub enum OptionError {
     InvalidOption,
     FileDoesntExist(String),
+    DirectoryDoesntExist(String)
     //MissingParameter,
 }
 
@@ -44,17 +45,18 @@ impl Option {
 const OPTIONS: [Option; 6] = [
     Option { id: 1, text: "Open Apps", parameters_count: 0, function: Some(open_apps::run_apps) },
     Option { id: 2, text: "Concatenate files", parameters_count: 3, function: Some(cat::concatenate_and_write_files) },
-    Option { id: 3, text: "List directories", parameters_count: 1, function: Some(directories::list) },
-    Option { id: 4, text: "Locate files", parameters_count: 1, function: Some(directories::locate_files) },
-    Option { id: 5, text: "Find text", parameters_count: 1, function: Some(directories::find_text) },
-    Option { id: 0, text: "Exit", parameters_count: 0, function: None },
+    Option { id: 3, text: "List files and directories", parameters_count: 1, function: Some(files_directories::list) },
+    Option { id: 4, text: "Locate files", parameters_count: 1, function: Some(files_directories::locate_files) },
+    Option { id: 5, text: "Find text", parameters_count: 1, function: Some(files_directories::find_text) },
+    Option { id: 0, text: "Exit", parameters_count: 0, function: Some(|_| -> Result<(), Box<dyn Error>> { process::exit(0) } as fn(&[String]) -> Result<(), Box<dyn Error>>) },
 ];
 
 impl fmt::Display for OptionError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             OptionError::InvalidOption => write!(f, "The option provided is invalid."),
-            OptionError::FileDoesntExist(file_name) => write!(f, "File {} doesn't exist.", file_name)
+            OptionError::FileDoesntExist(file_name) => write!(f, "File {} doesn't exist.", file_name),
+            OptionError::DirectoryDoesntExist(directory) => write!(f, "Directory {} doesn't exist.", directory)
         }
     }
 }
